@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cosmic Tic Tac Toe</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #0f0f1a;
+            color: #e0e0ff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            perspective: 1000px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .space-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: radial-gradient(ellipse at center, #0a0a1a 0%, #000000 100%);
+        }
+
+        .stars {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(1px 1px at 10% 20%, white, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 90% 70%, white, rgba(0,0,0,0));
+            background-size: 200px 200px;
+            animation: twinkle 3s infinite;
+        }
+
+        .nebula {
+            position: absolute;
+            width: 40%;
+            height: 40%;
+            border-radius: 50%;
+            filter: blur(40px);
+            opacity: 0.5;
+        }
+
+        .nebula-1 {
+            background: linear-gradient(45deg, #5e2bff, #00e5ff);
+            top: 20%;
+            left: 10%;
+        }
+
+        .nebula-2 {
+            background: linear-gradient(-45deg, #ff2b7b, #ff8f00);
+            bottom: 10%;
+            right: 15%;
+        }
+
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            transform-style: preserve-3d;
+        }
+
+        h1 {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.2rem;
+            background: linear-gradient(90deg, #00e5ff, #5e2bff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 10px rgba(94, 43, 255, 0.3);
+        }
+
+        .status {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            background: linear-gradient(90deg, #ff8f00, #ff2b7b);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .difficulty-select {
+            margin-bottom: 1rem;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #5e2bff;
+            background: rgba(30, 30, 60, 0.5);
+            color: #e0e0ff;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            border-radius: 10px;
+            padding: 20px;
+            background: rgba(15, 15, 30, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(94, 43, 255, 0.3);
+            box-shadow: 0 0 30px rgba(94, 43, 255, 0.2);
+            transform: translateZ(20px);
+        }
+
+        .cell {
+            width: 100px;
+            height: 100px;
+            background: rgba(30, 30, 60, 0.5);
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(94, 43, 255, 0.2);
+        }
+
+        .cell:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(94, 43, 255, 0.3);
+            background: rgba(94, 43, 255, 0.1);
+        }
+
+        .cell-x::before, .cell-x::after {
+            content: '';
+            position: absolute;
+            width: 80%;
+            height: 4px;
+            background: #ff2b7b;
+            animation: glow-x 1.5s infinite alternate;
+        }
+
+        .cell-x::before {
+            transform: rotate(45deg);
+        }
+
+        .cell-x::after {
+            transform: rotate(-45deg);
+        }
+
+        .cell-o::before {
+            content: '';
+            position: absolute;
+            width: 60%;
+            height: 60%;
+            border: 4px solid #00e5ff;
+            border-radius: 50%;
+            animation: glow-o 1.5s infinite alternate;
+        }
+
+        @keyframes twinkle {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+
+        @keyframes glow-x {
+            0% { box-shadow: 0 0 5px #ff2b7b; }
+            100% { box-shadow: 0 0 20px #ff2b7b, 0 0 10px #ff2b7b; }
+        }
+
+        @keyframes glow-o {
+            0% { box-shadow: 0 0 5px #00e5ff, inset 0 0 5px #00e5ff; }
+            100% { box-shadow: 0 0 20px #00e5ff, inset 0 0 10px #00e5ff; }
+        }
+
+        .reset-btn {
+            margin-top: 2rem;
+            padding: 10px 25px;
+            background: linear-gradient(90deg, #5e2bff, #00e5ff);
+            border: none;
+            border-radius: 50px;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .reset-btn::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            background: linear-gradient(90deg, #5e2bff, #00e5ff);
+            z-index: -1;
+            filter: blur(20px);
+            opacity: 0.7;
+            transition: all 0.3s ease;
+        }
+
+        .reset-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(94, 43, 255, 0.3);
+        }
+
+        .planet {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #5e2bff, #00e5ff);
+            top: 50%;
+            left: 15%;
+            filter: blur(1px);
+            animation: float 15s infinite alternate ease-in-out;
+        }
+
+        .moon {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #e0e0ff, #a0a0ff);
+            top: 30%;
+            right: 15%;
+            animation: float 12s infinite alternate-reverse ease-in-out;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+            100% { transform: translateY(0) rotate(0deg); }
+        }
+
+        @media (max-width: 768px) {
+            .cell {
+                width: 80px;
+                height: 80px;
+            }
+            
+            h1 {
+                font-size: 4rem;
+            }
+            
+            .planet, .moon {
+                display: none;
+            }
+        }
+
+        footer {
+            text-align: center;
+            padding: 1rem;
+            background: rgba(15, 15, 30, 0.6);
+            color: #e0e0ff;
+            border-top: 1px solid rgba(94, 43, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="space-background">
+        <div class="stars"></div>
+        <div class="nebula nebula-1"></div>
+        <div class="nebula nebula-2"></div>
+        <div class="planet"></div>
+        <div class="moon"></div>
+    </div>
+
+    <div class="game-container">
+        <h1>Cosmic Tic Tac Toe</h1>
+        <div class="status" id="status">Your turn (X)</div>
+        <select class="difficulty-select" id="difficulty">
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
+        </select>
+        <div class="board" id="board">
+            <div class="cell" data-index="0"></div>
+            <div class="cell" data-index="1"></div>
+            <div class="cell" data-index="2"></div>
+            <div class="cell" data-index="3"></div>
+            <div class="cell" data-index="4"></div>
+            <div class="cell" data-index="5"></div>
+            <div class="cell" data-index="6"></div>
+            <div class="cell" data-index="7"></div>
+            <div class="cell" data-index="8"></div>
+        </div>
+        <button class="reset-btn" id="reset">New Game</button>
+    </div>
+
+    <footer>
+      © 2025 All rights of this website game are reserved with Vaibhav Gupta .
+    </footer>
+
+    <script>
+        const board = document.getElementById('board');
+        const cells = document.querySelectorAll('.cell');
+        const status = document.getElementById('status');
+        const resetBtn = document.getElementById('reset');
+        const difficultySelect = document.getElementById('difficulty');
+
+        let currentPlayer = 'X';
+        let gameState = ['', '', '', '', '', '', '', '', ''];
+        let gameActive = true;
+        let difficulty = 'easy';
+
+        const winningConditions = [
+            [0, 1, 2],
+            [3, 4, 5],
+            [6, 7, 8],
+            [0, 3, 6],
+            [1, 4, 7],
+            [2, 5, 8],
+            [0, 4, 8],
+            [2, 4, 6]
+        ];
+
+        // Handle cell click
+        const handleCellClick = (e) => {
+            const clickedCell = e.target;
+            const clickedCellIndex = parseInt(clickedCell.getAttribute('data-index'));
+
+            if (gameState[clickedCellIndex] !== '' || !gameActive) {
+                return;
+            }
+
+            // Player move
+            handleCellPlayed(clickedCell, clickedCellIndex);
+            if (checkWin()) {
+                gameActive = false;
+                status.textContent = `You win!`;
+                return;
+            } else if (isBoardFull()) {
+                gameActive = false;
+                status.textContent = "Game ended in a draw!";
+                return;
+            }
+
+            // Computer move after slight delay for better UX
+            setTimeout(() => {
+                if (gameActive) {
+                    const computerMove = findBestMove();
+                    const computerCell = cells[computerMove];
+                    
+                    handleCellPlayed(computerCell, computerMove);
+                    if (checkWin()) {
+                        gameActive = false;
+                        status.textContent = `Computer wins!`;
+                        return;
+                    } else if (isBoardFull()) {
+                        gameActive = false;
+                        status.textContent = "Game ended in a draw!";
+                        return;
+                    }
+                }
+            }, 500);
+        };
+
+        // Handle cell played
+        const handleCellPlayed = (clickedCell, clickedCellIndex) => {
+            gameState[clickedCellIndex] = currentPlayer;
+            clickedCell.classList.add(`cell-${currentPlayer.toLowerCase()}`);
+            
+            // Switch player
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            updateStatus();
+        };
+
+        // Update game status
+        const updateStatus = () => {
+            const player = currentPlayer === 'X' ? 'your' : 'Computer';
+            status.textContent = `${player}'s turn (${currentPlayer})`;
+        };
+
+        // Check for win
+        const checkWin = () => {
+            for (let i = 0; i < winningConditions.length; i++) {
+                const [a, b, c] = winningConditions[i];
+                if (gameState[a] !== '' && 
+                    gameState[a] === gameState[b] && 
+                    gameState[a] === gameState[c]) {
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        // Check for draw
+        const isBoardFull = () => {
+            return gameState.every(cell => cell !== '');
+        };
+
+        // Reset game
+        const resetGame = () => {
+            currentPlayer = 'X';
+            gameState = ['', '', '', '', '', '', '', '', ''];
+            gameActive = true;
+            updateStatus();
+            cells.forEach(cell => {
+                cell.className = 'cell';
+            });
+        };
+
+        // Find best move based on difficulty
+        const findBestMove = () => {
+            if (difficulty === 'easy') {
+                return findRandomMove();
+            } else if (difficulty === 'medium') {
+                return findMediumMove();
+            } else {
+                return findHardMove();
+            }
+        };
+
+        // Random move for easy difficulty
+        const findRandomMove = () => {
+            const emptyCells = gameState.reduce((acc, cell, index) => {
+                if (cell === '') acc.push(index);
+                return acc;
+            }, []);
+            return emptyCells[Math.floor(Math.random() * emptyCells.length)];
+        };
+
+        // Medium difficulty: block player or random move
+        const findMediumMove = () => {
+            // Check for winning move for computer
+            for (let i = 0; i < gameState.length; i++) {
+                if (gameState[i] === '') {
+                    gameState[i] = 'O';
+                    if (checkWin()) {
+                        gameState[i] = '';
+                        return i;
+                    }
+                    gameState[i] = '';
+                }
+            }
+
+            // Block player's winning move
+            for (let i = 0; i < gameState.length; i++) {
+                if (gameState[i] === '') {
+                    gameState[i] = 'X';
+                    if (checkWin()) {
+                        gameState[i] = '';
+                        return i;
+                    }
+                    gameState[i] = '';
+                }
+            }
+
+            // Prefer center cell
+            if (gameState[4] === '') return 4;
+
+            // Choose random empty cell
+            return findRandomMove();
+        };
+
+        // Hard difficulty: Minimax algorithm
+        const findHardMove = () => {
+            let bestScore = -Infinity;
+            let bestMove;
+
+            for (let i = 0; i < gameState.length; i++) {
+                if (gameState[i] === '') {
+                    gameState[i] = 'O';
+                    let score = minimax(gameState, 0, false);
+                    gameState[i] = '';
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestMove = i;
+                    }
+                }
+            }
+            return bestMove;
+        };
+
+        // Minimax algorithm
+        const minimax = (board, depth, isMaximizing) => {
+            if (checkWin()) return isMaximizing ? -1 : 1;
+            if (isBoardFull()) return 0;
+
+            if (isMaximizing) {
+                let bestScore = -Infinity;
+                for (let i = 0; i < board.length; i++) {
+                    if (board[i] === '') {
+                        board[i] = 'O';
+                        let score = minimax(board, depth + 1, false);
+                        board[i] = '';
+                        bestScore = Math.max(score, bestScore);
+                    }
+                }
+                return bestScore;
+            } else {
+                let bestScore = Infinity;
+                for (let i = 0; i < board.length; i++) {
+                    if (board[i] === '') {
+                        board[i] = 'X';
+                        let score = minimax(board, depth + 1, true);
+                        board[i] = '';
+                        bestScore = Math.min(score, bestScore);
+                    }
+                }
+                return bestScore;
+            }
+        };
+
+        // Event listeners
+        cells.forEach(cell => cell.addEventListener('click', handleCellClick));
+        resetBtn.addEventListener('click', resetGame);
+        difficultySelect.addEventListener('change', (e) => {
+            difficulty = e.target.value;
+            resetGame(); // Reset game when difficulty changes
+        });
+    </script>
+</body>
+</html>
